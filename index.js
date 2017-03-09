@@ -47,43 +47,96 @@ atem.on('error', function (err) {
 });
 
 function setLights() {
-  var previewLight = (currentPreview * 2) + 15;
-  var programLight = (currentProgram * 2) + 14;
+  var previewLight = (currentPreview * 2) + 11;
+  var programLight = (currentProgram * 2) + 10;
 
   xk.allLightsOff();
-  xk.redLightOn(programLight);
-  xk.blueLightOn(previewLight);  
+  if (10 <= programLight && programLight <= 27) {
+    xk.redLightOn(programLight);
+  }
+
+  if (10 <= previewLight && previewLight <= 27) {
+    xk.blueLightOn(previewLight);
+  }
 
   if (currentOnAir) {
-    xk.redLightOn(10);
+    xk.redLightOn(6);
   }
 
   if (currentOnAirTransition) {
-    xk.blueLightOn(11);
+    xk.blueLightOn(7);
   }
 }  
 
+function setME1Preview(input) {
+  atem.changePreviewInput(input, 0);
+}
+
+function setME1Program(input) {
+  atem.changeProgramInput(input, 0);
+}
+
+downhandlers = [];
+
+downhandlers[0] = function () {
+  // Macro 1
+  atem.changePreviewInput(2, 0)
+  atem.autoTransition(0)
+}
+
+downhandlers[1] = function () {
+  // Macro 2
+  atem.changePreviewInput(3, 0)
+  atem.autoTransition(0)
+}
+
+downhandlers[2] = function () {
+  // Macro 3
+  atem.changePreviewInput(0, 0)
+  atem.autoTransition(0)
+}
+
+downhandlers[3] = function () {
+  // Macro 4
+}
+
+downhandlers[6] = function () {
+  atem.changeUpstreamKeyState(0, currentOnAir ? 0 : 1, 0);  
+}
+
+downhandlers[7] = function () {
+  atem.changeUpstreamKeyNextState(0, currentOnAirTransition ? 0 : 1, 0);
+}
+
+downhandlers[11] = setME1Preview.bind({}, 0)
+downhandlers[13] = setME1Preview.bind({}, 1)
+downhandlers[15] = setME1Preview.bind({}, 2)
+downhandlers[17] = setME1Preview.bind({}, 3)
+downhandlers[19] = setME1Preview.bind({}, 4)
+downhandlers[21] = setME1Preview.bind({}, 5)
+downhandlers[23] = setME1Preview.bind({}, 6)
+downhandlers[25] = setME1Preview.bind({}, 7)
+downhandlers[27] = setME1Preview.bind({}, 8)
+
+downhandlers[10] = setME1Program.bind({}, 0)
+downhandlers[12] = setME1Program.bind({}, 1)
+downhandlers[14] = setME1Program.bind({}, 2)
+downhandlers[16] = setME1Program.bind({}, 3)
+downhandlers[18] = setME1Program.bind({}, 4)
+downhandlers[20] = setME1Program.bind({}, 5)
+downhandlers[22] = setME1Program.bind({}, 6)
+downhandlers[24] = setME1Program.bind({}, 7)
+downhandlers[26] = setME1Program.bind({}, 8)
+
+
+downhandlers[28] = function () {
+  atem.autoTransition(0);
+}
 
 xk.on('keydown', function (key) {
-  if (key <= 7) {
-    console.log('Placeholder for Macro ' + key);
-  } else if (10 === key) {
-    atem.changeUpstreamKeyState(0, currentOnAir ? 0 : 1, 0);
-  } else if (11 === key) {
-    atem.changeUpstreamKeyNextState(0, currentOnAirTransition ? 0 : 1, 0);
-  } else if ((14 <= key) && (key <= 27)) {
-    var input = Math.floor((key - 14) / 2);
-    var isPrev = (key % 2) === 1;
-    
-    if (isPrev) {
-      atem.changePreviewInput(input, 0);
-    } else {
-      atem.changeProgramInput(input, 0);
-    }
-
-  } else if (28 === key) {
-    atem.autoTransition(0);
+  if ('function' == typeof downhandlers[key]) {
+    downhandlers[key]()
   }
-});
+})
 
 atem.connect('192.168.0.133');
