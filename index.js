@@ -38,8 +38,15 @@ atem.on('stateChanged', function (err, state) {
   } 
 });
 
+
 atem.on('connect', function () {
   console.log('ATEM Connected');
+  xk.greenLedOn();
+});
+
+atem.on('disconnect', function () {
+  console.log('ATEM Connected');
+  xk.greenLedOff();
 });
 
 atem.on('error', function (err) {
@@ -98,6 +105,8 @@ downhandlers[2] = function () {
 
 downhandlers[3] = function () {
   // Macro 4
+  atem.changePreviewInput(4, 0)
+  atem.autoTransition(0)
 }
 
 downhandlers[6] = function () {
@@ -138,5 +147,8 @@ xk.on('keydown', function (key) {
     downhandlers[key]()
   }
 })
+
+xk.greenLedOff();
+xk.redLedOff();
 
 atem.connect('192.168.0.133');
